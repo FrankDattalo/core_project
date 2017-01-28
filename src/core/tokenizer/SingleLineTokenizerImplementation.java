@@ -28,14 +28,14 @@ public class SingleLineTokenizerImplementation implements Tokenizer {
 	/**
 	 * Returns the next token in the stream or the EOF token if no token exists.
 	 */
-    public String nextToken() {
-        if(noTokensAvailable()) return EOF;
+    public void nextToken() {
+        if(noTokensAvailable()) return;
 
         if(currentLine == null) currentLine = input.nextLine();
         
         advanceToNextNonWhitespace();
                
-        if(noTokensAvailable()) return EOF;
+        if(noTokensAvailable()) return;
 
         String currentChar = currentLine.substring(tokenBegin, tokenEnd);
 
@@ -109,8 +109,6 @@ public class SingleLineTokenizerImplementation implements Tokenizer {
 			error("Unexpected character '" + currentChar + "'");
 		
 		}
-
-        return currentToken();
     }
 
 	/**

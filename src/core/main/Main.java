@@ -47,7 +47,9 @@ public class Main {
 
 			String current = Tokenizer.EOF;
 			do {
-				current = tokenizer.nextToken();
+				tokenizer.nextToken();
+
+				current = tokenizer.currentToken();
 
 				System.out.println(Tokenizer.toIntCode(current));
 

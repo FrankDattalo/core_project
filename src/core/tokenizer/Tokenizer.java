@@ -40,9 +40,9 @@ public interface Tokenizer {
 	String currentToken();
 	
 	/**
-	 * Returns the next token from the input program.
+	 * Advances the cursor to the next token from the input program.
 	 */
-	String nextToken();
+	void nextToken();
 
 	void setScanner(Scanner in);
 
