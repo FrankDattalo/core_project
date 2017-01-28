@@ -1,0 +1,8 @@
+program 
+  int Y,Z; 
+begin 
+  Y = 20; 
+  Z = 5;
+  Y = Y - Z;
+  write Y;
+end
