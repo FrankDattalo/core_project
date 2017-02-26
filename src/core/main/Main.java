@@ -1,15 +1,16 @@
 package core.main;
 
-import core.exceptions.CoreException;
-import core.tokenizer.SingleLineTokenizerImplementation;
-import core.tokenizer.Tokenizer;
-import java.util.regex.Pattern;
 import java.io.File;
-import java.util.Scanner;
+
+import core.exceptions.CoreException;
+import core.interpreter.interfaces.Program;
+import core.parser.interfaces.Parser;
+import core.parser.interfaces.ParserContainer;
+import core.tokenizer.interfaces.Tokenizer;
 
 /**
- * Entry class to the Core Tokenizer.
- * 
+ * Entry class to the Core Interpreter.
+ *
  * @author Frank Dattalo
  */
 public class Main {
@@ -19,42 +20,36 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
-			// input validation
-			if(args.length < 1) {
+
+			if (args.length < 1) {
 				throw new CoreException("Expected filename as first argument");
 			}
 
 			String fileName = args[0];
 
-			// input validation
-			if(!Pattern.compile(".*\\.core$").matcher(fileName).matches()) {	
-				throw new CoreException("'" + fileName + "' is an invalid file format. Expected file extension: '.core'");
-			}
-			
-			// open file 
+			// open file
 			File inputFile = new File(fileName);
-			
+
 			// input validation
-			if(!inputFile.exists()) { 
+			if (!inputFile.exists()) {
 				throw new CoreException(fileName + " does not exist.");
 			}
-			
+
 			// instantiate tokenizer
-			Tokenizer tokenizer = new SingleLineTokenizerImplementation();
+			Tokenizer tokenizer = Tokenizer.createInstance(inputFile);
 
-			// setup tokenizer
-			tokenizer.setScanner(new Scanner(inputFile));
+			// instantiate a new parser container
+			ParserContainer container = ParserContainer.newInstance();
 
-			String current = Tokenizer.EOF;
-			do {
-				tokenizer.nextToken();
+			// get the program parser
+			Parser<Program> parser = container.getProgramParser();
 
-				current = tokenizer.currentToken();
+			// parse the program
+			Program program = parser.parse(container, tokenizer);
 
-				System.out.println(Tokenizer.toIntCode(current));
+			// print the program
+			program.print(0, System.out);
 
-			} while(current != Tokenizer.EOF);
-			
 		} catch (CoreException e) { // user runtime error
 			System.err.println("[ERROR]: " + e.getMessage());
 
