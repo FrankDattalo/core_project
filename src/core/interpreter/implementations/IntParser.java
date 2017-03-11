@@ -46,6 +46,10 @@ public class IntParser {
 			str = str.substring(1);
 		}
 
+		if(str == null || str.isEmpty()) {
+			throw new CoreException("Invalid integer " + str);
+		}
+
 		int ret = 0;
 
 		for (int i = 0; i < str.length(); i++) {
