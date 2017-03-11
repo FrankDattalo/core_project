@@ -1,12 +1,14 @@
 Overall Design
 ************************************************************************************************************************************************
 
-The design of the Core parser is split into two sections:
-src/core/imterpreter and src/core/parser
+The design of the Core is split into Three sections:
+src/core/interpreter src/core/parser src/core/tokenizer
 
-Instead of nodes being having to be instantiated, then parsed, then executed (unimplemented) or printed,
-when nodes are instantiated, they are read to be printed or executed. This prevents the gotcha of having
-to parse the node after instantiation.  Furthermore, the parser interface is very simple as a result:
+The tokenizer is responsible for producing tokens to be parsed by the parser. Instead of nodes having to be
+instantiated, then parsed, then executed, when nodes are instantiated, they are read to be
+printed or executed. This prevents the gotcha of having to parse the node after instantiation.
+
+Furthermore, the parser interface is very simple as a result:
 
 public interface Parser<T extends Printable> {
 
@@ -45,7 +47,7 @@ Assignable: defines interface
 			can be assigned a value.
 
 Thus each AST node can be created as an interface that extends these where necessary, 
-and they can do so without having to redefine functionality beyond what is inhereted.
+and they can do so without having to redefine functionality beyond what is inherited.
 
 For example:
 
@@ -65,6 +67,18 @@ public interface Program extends Executable {
 	...
 }
 
+AST nodes are instantiated using factory methods that exist on the interfaces for their respective classes. This, along
+with the fact that the parser is given parser factory and tokenizer interfaces, each part of the architecture can be
+developed independent and implemented independently of each other.
+
+Since project 2, the parser was modified to detect duplicate variables as well as the lack of variable declarations.
+The interpreter is responsible for detecting integer overflow in expressions as well as the use of identifiers that
+have no value.  Furthermore, src/core/parser now contains IntParser which is responsible for parsing and validating of
+integers. Thus functionality is used in the interpreter after evaluating expressions and user input.  However, beyond
+the aforementioned changes no new classes were added, the only changes that were made were to existing classes, namely
+the classes found in sr/core/interpreter/implementations. These classes now have implemented execute(), evaluate(),
+and assign() methods.
+
 Project Hirerarchy
 ************************************************************************************************************************************************
 
@@ -77,7 +91,7 @@ testCases/								- contains various test cases for the project.
 
 src/core/exceptions 					- contains CoreException.java which is thrown by the interpreter upon user error.
 
-src/core/interpreter/implementations/ 	- contains source files for printing and executing (unimplemented) parse tree nodes.
+src/core/interpreter/implementations/ 	- contains source files for printing and executing parse tree nodes.
 
 src/core/interpreter/interfaces/		- contains interface definitions of the core AST nodes.  Each file contains factory 
 											methods for instantiating the corresponding to the implementation in 
@@ -99,7 +113,7 @@ src/core/tokenizer/interfaces/			- contains the interface definition for the cor
 Class Documentation
 ************************************************************************************************************************************************
 
-Public interfaces for the core parser listed below:
+Public interfaces:
 
 /**
  * The parser interface defines an object or functional interface which recieves
@@ -533,13 +547,33 @@ public interface Factor extends Evaluatable<Integer> {
 public interface Id extends Assignable<Integer> {
 
 	/**
-	 * Id node factory method.
-	 * 
-	 * @param value
-	 *            the value of the id.
-	 * @return An id node.
-	 */
-	static Id createInstance(String value);
+     * Id node factory method.
+     *
+     * @param value
+     *            the value of the id.
+     * @return An id node.
+     */
+    static Id createInstance(String value);
+
+    /**
+     * Returns the identifier associated with this id.
+     */
+    String getIdentifier();
+
+    /**
+     * Reports whether this Id has a value.
+     */
+    boolean hasValue();
+
+    /**
+     * Reports whether this object is declared.
+     */
+    boolean isDeclared();
+
+    /**
+     * Declares this object.
+     */
+    void setDeclared();
 }
 
 /**
@@ -765,5 +799,90 @@ public interface Term extends Evaluatable<Integer> {
 	static Term createInstance(Factor f, Term t);
 }
 
+/**
+ * Utility class to parse Core Ints
+ */
+public class IntParser {
 
+    /**
+     * Reports whether i is a valid core integer.
+     * @param i The int to test
+     * @return Whether i is a valid core integer.
+     */
+	public static boolean isValidInt(int i);
 
+    /**
+     * Reports whether the string is a valid integer.
+     * @param str the string to test.
+     * @return whether the string is a valid integer.
+     */
+	public static boolean isValidInt(String str);
+
+    /**
+     * Parses str as a core int.
+     * @param str the string to parse.
+     * @return the parsed int.
+     */
+	public static int parse(String str);
+}
+
+/**
+ * Public interface for the Core Tokenizer.
+ *
+ * @author Frank Dattalo
+ */
+public interface Tokenizer {
+
+	public static enum Type {
+		PROGRAM, BEGIN, END, INT, IF, THEN, ELSE, WHILE, LOOP, READ, WRITE, AND, OR, SEMICOLON, ASSIGN, NOT,
+		LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, PLUS, MINUS, TIMES, NOT_EQUAL, EQUAL,
+		GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN, INTEGER, IDENTIFIER
+	}
+
+	/**
+	 * Factory method for instantiating tokenizers.
+	 *
+	 * @param in
+	 *            the core input file.
+	 * @return A core tokenizer instance.
+	 */
+	static Tokenizer createInstance(File in);
+
+	/**
+	 * The Token that signifies the end of the file.
+	 */
+	static final String EOF = "###END_OF_FILE_TOKEN###";
+
+	/**
+	 * Returns the current token from the input program.
+	 */
+	String getCurrentToken();
+
+	/**
+	 * Advances the cursor to the next token from the input program.
+	 */
+	void nextToken();
+
+	/**
+	 * Returns the current line number of the tokenizer.
+	 */
+	int getCurrentLineNumber();
+
+	/**
+	 * @param t
+	 *            - The Token to convert to a tokenizer enum
+	 * @return - the Enum tokenizer type
+	 */
+	Tokenizer.Type toType(String t);
+}
+
+/**
+ * Common exception class for the Core Interpreter. User related errors will be
+ * thrown using this exception.
+ *
+ * @author Frank Dattalo
+ */
+public class CoreException extends RuntimeException {
+
+	public CoreException(String s);
+}

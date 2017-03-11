@@ -19,8 +19,22 @@ public class CompositeImpl implements Composite {
 
 	@Override
 	public Boolean evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		switch (this.t) {
+		case NOT_EQUAL:
+			return this.f1.evaluate().intValue() != this.f2.evaluate().intValue();
+		case EQUAL:
+			return this.f1.evaluate().intValue() == this.f2.evaluate().intValue();
+		case GREATER:
+			return this.f1.evaluate() > this.f2.evaluate();
+		case LESS:
+			return this.f1.evaluate() < this.f2.evaluate();
+		case GREATER_OR_EQUAL:
+			return this.f1.evaluate() >= this.f2.evaluate();
+		case LESS_OR_EQUAL:
+			return this.f1.evaluate() <= this.f2.evaluate();
+		default:
+			throw new RuntimeException("invalid type");
+		}
 	}
 
 	@Override

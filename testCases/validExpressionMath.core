@@ -1,0 +1,6 @@
+program
+    int X1;
+begin
+    X1 = 5 - 3 - 3;
+    write X1;
+end

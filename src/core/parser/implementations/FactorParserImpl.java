@@ -24,7 +24,15 @@ public class FactorParserImpl implements Parser<Factor> {
 			return Factor.createInstance(currentToken);
 
 		case IDENTIFIER:
-			return Factor.createInstance(Id.createInstance(currentToken));
+
+			Id id = Id.createInstance(currentToken);
+
+			if (!id.isDeclared()) {
+				throw new CoreException(id.getIdentifier()
+						+ " must be declared and assigned a value before being used in an expression.");
+			}
+
+			return Factor.createInstance(id);
 
 		case LEFT_PAREN:
 

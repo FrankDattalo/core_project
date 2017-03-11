@@ -1,8 +1,8 @@
 package core.tokenizer.interfaces;
 
-import java.io.File;
-
 import core.tokenizer.implementations.TokenizerImpl;
+
+import java.io.File;
 
 /**
  * Public interface for the Core Tokenizer.
@@ -11,8 +11,10 @@ import core.tokenizer.implementations.TokenizerImpl;
  */
 public interface Tokenizer {
 
-	public static enum Type {
-		PROGRAM, BEGIN, END, INT, IF, THEN, ELSE, WHILE, LOOP, READ, WRITE, AND, OR, SEMICOLON, ASSIGN, NOT, LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, PLUS, MINUS, TIMES, NOT_EQUAL, EQUAL, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN, INTEGER, IDENTIFIER
+	enum Type {
+		PROGRAM, BEGIN, END, INT, IF, THEN, ELSE, WHILE, LOOP, READ, WRITE, AND, OR, SEMICOLON, ASSIGN, NOT,
+        LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, PLUS, MINUS, TIMES, NOT_EQUAL, EQUAL,
+        GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN, INTEGER, IDENTIFIER
 	}
 
 	/**

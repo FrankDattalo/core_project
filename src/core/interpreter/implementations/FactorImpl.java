@@ -2,6 +2,7 @@ package core.interpreter.implementations;
 
 import java.io.PrintStream;
 
+import core.exceptions.CoreException;
 import core.interpreter.interfaces.Expression;
 import core.interpreter.interfaces.Factor;
 import core.interpreter.interfaces.Id;
@@ -28,8 +29,28 @@ public class FactorImpl implements Factor {
 
 	@Override
 	public Integer evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		switch (this.alternative) {
+		case 1:
+			return IntParser.parse((String) this.altObj);
+		case 2:
+			Id id = (Id) this.altObj;
+
+			if(!id.hasValue()) {
+				throw new CoreException("Tried to use " + id.getIdentifier() + " before it had a value");
+			}
+
+			return id.evaluate();
+		case 3:
+			int i = ((Expression) this.altObj).evaluate();
+
+			if(!IntParser.isValidInt(i)) {
+				throw new CoreException("Integer overflow from mathematical expression");
+			}
+
+			return i;
+		default:
+			throw new RuntimeException("Invalid alternative");
+		}
 	}
 
 	@Override

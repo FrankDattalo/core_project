@@ -19,7 +19,9 @@ public class LoopImpl implements Loop {
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
+		while (this.cond.evaluate()) {
+			this.stmtSeq.execute();
+		}
 
 	}
 

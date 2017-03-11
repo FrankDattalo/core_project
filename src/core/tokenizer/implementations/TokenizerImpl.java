@@ -336,7 +336,7 @@ public class TokenizerImpl extends AbstractTokenizer {
 		case "(":
 			return Tokenizer.Type.LEFT_PAREN;
 		case ")":
-			return Tokenizer.Type.RIGHT_BRACKET;
+			return Tokenizer.Type.RIGHT_PAREN;
 		case "+":
 			return Tokenizer.Type.PLUS;
 		case "-":

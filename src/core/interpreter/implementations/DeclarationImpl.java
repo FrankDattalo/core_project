@@ -16,7 +16,6 @@ public class DeclarationImpl implements Declaration {
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override

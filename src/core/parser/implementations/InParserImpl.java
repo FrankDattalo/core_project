@@ -1,5 +1,7 @@
 package core.parser.implementations;
 
+import core.exceptions.CoreException;
+import core.interpreter.interfaces.Id;
 import core.interpreter.interfaces.IdList;
 import core.interpreter.interfaces.In;
 import core.parser.interfaces.Parser;
@@ -15,6 +17,12 @@ public class InParserImpl implements Parser<In> {
 		Parser.expectAndConsume(tokenizer, "read");
 		IdList idl = idlp.parse(parserContainer, tokenizer);
 		Parser.expectAndConsume(tokenizer, ";");
+
+		for (Id id : idl.evaluate()) {
+			if (!id.isDeclared()) {
+				throw new CoreException("Cannot read " + id.getIdentifier() + " because it is not defined");
+			}
+		}
 
 		return In.createInstance(idl);
 	}

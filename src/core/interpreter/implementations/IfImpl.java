@@ -26,7 +26,13 @@ public class IfImpl implements If {
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
+		boolean val = this.cond.evaluate();
+
+		if (val) {
+			this.trueSeq.execute();
+		} else if (this.falseSeq != null) {
+			this.falseSeq.execute();
+		}
 
 	}
 

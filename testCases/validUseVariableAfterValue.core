@@ -1,0 +1,7 @@
+program 
+	int X;
+begin 
+	read X;
+	X = X + 1; 
+	write X;
+end

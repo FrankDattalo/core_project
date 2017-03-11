@@ -1,5 +1,6 @@
 package core.parser.implementations;
 
+import core.exceptions.CoreException;
 import core.interpreter.interfaces.Assign;
 import core.interpreter.interfaces.Expression;
 import core.interpreter.interfaces.Id;
@@ -15,6 +16,10 @@ public class AssignParserImpl implements Parser<Assign> {
 		Parser<Expression> exp = parserContainer.getExpressionParser();
 
 		Id id = idp.parse(parserContainer, tokenizer);
+
+		if (!id.isDeclared()) {
+			throw new CoreException(id.getIdentifier() + " must be declared before use");
+		}
 
 		Parser.expectAndConsume(tokenizer, "=");
 

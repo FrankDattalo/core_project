@@ -1,0 +1,6 @@
+program
+int X;
+begin
+	X = 99999999 * 99999999;
+	write X;
+end

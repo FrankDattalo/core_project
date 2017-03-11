@@ -1,6 +1,7 @@
 package core.interpreter.implementations;
 
 import java.io.PrintStream;
+import java.util.LinkedList;
 import java.util.List;
 
 import core.interpreter.interfaces.Id;
@@ -22,8 +23,14 @@ public class IdListImpl implements IdList {
 
 	@Override
 	public List<Id> evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Id> l = new LinkedList<>();
+		l.add(this.id);
+
+		if (this.idl != null) {
+			l.addAll(this.idl.evaluate());
+		}
+
+		return l;
 	}
 
 	@Override

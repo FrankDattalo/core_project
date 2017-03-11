@@ -1,0 +1,5 @@
+program
+	int Y;
+begin
+	write X;
+end

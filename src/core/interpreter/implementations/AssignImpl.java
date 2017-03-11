@@ -2,9 +2,11 @@ package core.interpreter.implementations;
 
 import java.io.PrintStream;
 
+import core.exceptions.CoreException;
 import core.interpreter.interfaces.Assign;
 import core.interpreter.interfaces.Expression;
 import core.interpreter.interfaces.Id;
+import core.tokenizer.interfaces.Tokenizer;
 
 public class AssignImpl implements Assign {
 
@@ -18,8 +20,13 @@ public class AssignImpl implements Assign {
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
+		Integer ret = this.expr.evaluate();
 
+		if (!IntParser.isValidInt(ret)) {
+			throw new CoreException("Integer overflow from mathematical expression");
+		}
+
+		this.id.assign(ret);
 	}
 
 	@Override

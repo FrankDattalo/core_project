@@ -1,5 +1,7 @@
 package core.parser.implementations;
 
+import core.exceptions.CoreException;
+import core.interpreter.interfaces.Id;
 import core.interpreter.interfaces.IdList;
 import core.interpreter.interfaces.Out;
 import core.parser.interfaces.Parser;
@@ -15,6 +17,12 @@ public class OutParserImpl implements Parser<Out> {
 		Parser.expectAndConsume(tokenizer, "write");
 		IdList idl = idlp.parse(parserContainer, tokenizer);
 		Parser.expectAndConsume(tokenizer, ";");
+
+		for (Id id : idl.evaluate()) {
+			if (!id.isDeclared()) {
+				throw new CoreException("Cannot reference undeclared variable " + id.getIdentifier());
+			}
+		}
 
 		return Out.createInstance(idl);
 	}

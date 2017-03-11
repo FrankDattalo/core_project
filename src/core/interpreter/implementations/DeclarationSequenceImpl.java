@@ -21,11 +21,6 @@ public class DeclarationSequenceImpl implements DeclarationSequence {
 
 	@Override
 	public void execute() {
-		this.dec.execute();
-
-		if (this.decs != null) {
-			this.decs.execute();
-		}
 	}
 
 	@Override

@@ -30,8 +30,18 @@ public class ConditionImpl implements Condition {
 
 	@Override
 	public Boolean evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		switch (this.type) {
+		case REGULAR:
+			return this.obj1.evaluate();
+		case NEGATED:
+			return !this.obj1.evaluate();
+		case AND:
+			return this.obj1.evaluate() && this.obj2.evaluate();
+		case OR:
+			return this.obj1.evaluate() || this.obj2.evaluate();
+		default:
+			throw new RuntimeException("Invalid type");
+		}
 	}
 
 	@Override

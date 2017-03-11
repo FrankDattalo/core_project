@@ -2,6 +2,7 @@ package core.interpreter.implementations;
 
 import java.io.PrintStream;
 
+import core.exceptions.CoreException;
 import core.interpreter.interfaces.Factor;
 import core.interpreter.interfaces.Term;
 
@@ -21,8 +22,17 @@ public class TermImpl implements Term {
 
 	@Override
 	public Integer evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		int ret = this.f.evaluate();
+
+		if (this.t != null) {
+			ret = ret * this.t.evaluate();
+
+			if(!IntParser.isValidInt(ret)) {
+				throw new CoreException("Integer overflow from mathematical expression");
+			}
+		}
+
+		return ret;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package core.interpreter.implementations;
 
 import java.io.PrintStream;
 
+import core.exceptions.CoreException;
 import core.interpreter.interfaces.Expression;
 import core.interpreter.interfaces.Term;
 
@@ -23,8 +24,28 @@ public class ExpressionImpl implements Expression {
 
 	@Override
 	public Integer evaluate() {
-		// TODO Auto-generated method stub
-		return null;
+		if (this.type == null) {
+			return this.term.evaluate();
+		}
+
+		int i;
+
+		switch (this.type) {
+		case ADD:
+			i = this.term.evaluate() + this.expr.evaluate();
+		    break;
+        case SUB:
+			i = this.term.evaluate() - this.expr.evaluate();
+			break;
+		default:
+			throw new RuntimeException("Invalid type for expression");
+		}
+
+		if(!IntParser.isValidInt(i)) {
+			throw new CoreException("Integer overflow from mathematical expression");
+		}
+
+		return i;
 	}
 
 	@Override

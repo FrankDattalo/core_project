@@ -7,9 +7,9 @@ Testing
 ************************************************************************************************************************************************
 
 This project was tested with the various test cases within the testCase folder.
-The test cases have semantic naming convetions, and thus the names describe the tests that the test cases are testing against.
+The test cases have semantic naming conventions, and thus the names describe the tests that the test cases are testing against.
 The test cases included in this project contain negative tests as well as positive tests.
-Furthermore, the test cases for this project contain test of the Tokenizer as well as the Parser.
+Furthermore, the test cases for this project contain test of the Tokenizer, Parser, and Executor.
 
 Compiling
 ************************************************************************************************************************************************

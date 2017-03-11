@@ -22,7 +22,11 @@ public class StatementSequenceImpl implements StatementSequence {
 
 	@Override
 	public void execute() {
-		// TODO Auto-generated method stub
+		this.stmt.execute();
+
+		if (this.stmtSeq != null) {
+			this.stmtSeq.execute();
+		}
 	}
 
 	@Override
