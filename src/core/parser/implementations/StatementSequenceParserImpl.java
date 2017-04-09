@@ -19,13 +19,6 @@ public class StatementSequenceParserImpl implements Parser<StatementSequence> {
 
 		Tokenizer.Type type = tokenizer.toType(currentToken);
 
-		boolean b = true;
-
-		while(b) {
-			System.out.println("Hello!");
-			b = Math.random() > .5;
-		}
-
 		if (type == Type.IF || type == Type.IDENTIFIER || type == Type.WHILE || type == Type.READ
 				|| type == Type.WRITE) {
 			StatementSequence stmts = this.parse(parserContainer, tokenizer);
