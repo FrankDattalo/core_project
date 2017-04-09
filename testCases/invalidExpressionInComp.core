@@ -1,0 +1,8 @@
+program
+    int X;
+begin
+    read X;
+    if ( X >= (99999999 + 1)) then
+        write X;
+    end;
+end

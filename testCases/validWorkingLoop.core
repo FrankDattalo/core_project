@@ -1,0 +1,16 @@
+program
+	int X, Y;
+begin
+	
+	read Y;
+	
+	while ( Y > 0 ) loop
+		read X;
+		X = X * 3 + 1;
+		Y = X - 2;
+		write X, Y;
+		read Y;
+	end;
+end
+	
+	

@@ -1,0 +1,888 @@
+Overall Design
+************************************************************************************************************************************************
+
+The design of the Core is split into Three sections:
+src/core/interpreter src/core/parser src/core/tokenizer
+
+The tokenizer is responsible for producing tokens to be parsed by the parser. Instead of nodes having to be
+instantiated, then parsed, then executed, when nodes are instantiated, they are read to be
+printed or executed. This prevents the gotcha of having to parse the node after instantiation.
+
+Furthermore, the parser interface is very simple as a result:
+
+public interface Parser<T extends Printable> {
+
+	T parse(ParserContainer parserContainer, Tokenizer tokenizer);
+}
+
+Finally, a Parser for a specific AST node can be defined as follows:
+
+public class AssignParserImpl implements Parser<Assign> {
+
+	@Override
+	public Assign parse(ParserContainer parserContainer, Tokenizer tokenizer) {
+		...
+	}
+}
+
+A parser is given a tokenizer and a container which houses the other parsers that it may need, and it will return
+an executable or printable AST node.  Finally, this means that every AST node parser implementation is stateless, 
+and given the same input will always act the same.
+
+AST nodes are defined in a hirerarchial manner as follows:
+
+Printable: defines interface 
+	|	   for printing AST nodes.
+	|
+	|--------------------------------------
+	|								      |
+Evaluatable: defines interface        Executable: defines interface 
+	|		 for evaluating                       for AST nodes that
+	|		 AST nodes that                       can be executed.
+	|		 return a value.
+	|
+	|
+Assignable: defines interface
+			for AST nodes that
+			can be assigned a value.
+
+Thus each AST node can be created as an interface that extends these where necessary, 
+and they can do so without having to redefine functionality beyond what is inherited.
+
+For example:
+
+public interface Id extends Assignable<Integer> {
+	...
+}
+
+public interface Statement extends Executable {
+	...
+}
+
+public interface Expression extends Evaluatable<Integer> {
+	...
+}
+
+public interface Program extends Executable {
+	...
+}
+
+AST nodes are instantiated using factory methods that exist on the interfaces for their respective classes. This, along
+with the fact that the parser is given parser factory and tokenizer interfaces, each part of the architecture can be
+developed independent and implemented independently of each other.
+
+Since project 2, the parser was modified to detect duplicate variables as well as the lack of variable declarations.
+The interpreter is responsible for detecting integer overflow in expressions as well as the use of identifiers that
+have no value.  Furthermore, src/core/parser now contains IntParser which is responsible for parsing and validating of
+integers. Thus functionality is used in the interpreter after evaluating expressions and user input.  However, beyond
+the aforementioned changes no new classes were added, the only changes that were made were to existing classes, namely
+the classes found in sr/core/interpreter/implementations. These classes now have implemented execute(), evaluate(),
+and assign() methods.
+
+Project Hirerarchy
+************************************************************************************************************************************************
+
+The project contains three top level folders:
+src/ 									- contains all project source code.
+
+documentation/							- the folder in which this document is located in. contains documentation of the project.
+
+testCases/								- contains various test cases for the project.
+
+src/core/exceptions 					- contains CoreException.java which is thrown by the interpreter upon user error.
+
+src/core/interpreter/implementations/ 	- contains source files for printing and executing parse tree nodes.
+
+src/core/interpreter/interfaces/		- contains interface definitions of the core AST nodes.  Each file contains factory 
+											methods for instantiating the corresponding to the implementation in 
+											src/interpreter/implementations/.
+											
+src/core/main							- contains Main.java as well as the entry point for the parser.
+
+src/core/parser/implementations/		- contains parser definitions where each parser is responsible for creating an AST node from the core 
+											grammar. The implementations use the factory methods attached to the AST node's interfaces found in 
+											src/interpreter/interfaces/.
+											
+src/core/parser/interfaces/				- contains interfaces that are used to define core AST nodes as well as an interface for ParserContainer 
+											which houses factory method to create parsers for various AST nodes.
+											
+src/core/tokenizer/implementations/		- contains the implementation for the core tokenizer.
+
+src/core/tokenizer/interfaces/			- contains the interface definition for the core tokenizer.
+
+Class Documentation
+************************************************************************************************************************************************
+
+Public interfaces:
+
+/**
+ * The parser interface defines an object or functional interface which recieves
+ * a parser container and tokenizer and returns a AST node of type T.
+ *
+ * @param <T>
+ *            The that this parser will return from parse().
+ */
+public interface Parser<T extends Printable> {
+
+	/**
+	 * Utility method which throws an exception unless the type of the current
+	 * token is of Tokenizer.Type type.
+	 *
+	 * @param t
+	 *            the tokenizer.
+	 * @param type
+	 *            the type to expect of the current token.
+	 */
+	static void expect(Tokenizer t, Tokenizer.Type type);
+
+	/**
+	 * Utility method which throws an exception unless the value of the current
+	 * token equals() expect.
+	 *
+	 * @param t
+	 *            The tokenizer.
+	 * @param expect
+	 *            The expected token.
+	 */
+	static void expect(Tokenizer t, String expect);
+
+	/**
+	 * Utility method which will expect the current token from tokenizer t to be
+	 * expect and then consume that token.
+	 *
+	 * @param t
+	 *            The tokenizer.
+	 * @param expect
+	 *            The expected token.
+	 */
+	static void expectAndConsume(Tokenizer t, String expect);
+
+	/**
+	 * Given a parserContainer and tokenizer, this method will parse the AST
+	 * node T or throw an exception if it fails to parse.
+	 *
+	 * @param parserContainer
+	 *            the parser container.
+	 * @param tokenizer
+	 *            the tokenizer.
+	 * @return An AST node T.
+	 */
+	T parse(ParserContainer parserContainer, Tokenizer tokenizer);
+}
+
+/**
+ * ParserContainer interface defines methods to retrieve parsers for AST nodes.
+ */
+public interface ParserContainer {
+
+	/**
+	 * @return A program node parser.
+	 */
+	Parser<Program> getProgramParser();
+
+	/**
+	 * @return An assign node parser.
+	 */
+	Parser<Assign> getAssignParser();
+
+	/**
+	 * @return A composite node parser.
+	 */
+	Parser<Composite> getCompositeParser();
+
+	/**
+	 * @return A condition node parser.
+	 */
+	Parser<Condition> getConditonParser();
+
+	/**
+	 * @return A declaration node parser.
+	 */
+	Parser<Declaration> getDeclarationParser();
+
+	/**
+	 * @return A declaration sequence node parser.
+	 */
+	Parser<DeclarationSequence> getDeclarationSequenceParser();
+
+	/**
+	 * @return An expression node parser.
+	 */
+	Parser<Expression> getExpressionParser();
+
+	/**
+	 * @return A factor node parser.
+	 */
+	Parser<Factor> getFactorParser();
+
+	/**
+	 * @return An id list node parser.
+	 */
+	Parser<IdList> getIdListParser();
+
+	/**
+	 * @return An if node parser.
+	 */
+	Parser<If> getIfParser();
+
+	/**
+	 * @return An in node parser.
+	 */
+	Parser<In> getInParser();
+
+	/**
+	 * @return A loop parser.
+	 */
+	Parser<Loop> getLoopParser();
+
+	/**
+	 * @return An out parser.
+	 */
+	Parser<Out> getOutParser();
+
+	/**
+	 * @return A statement parser.
+	 */
+	Parser<Statement> getStatementParser();
+
+	/**
+	 * @return A statement sequence parser.
+	 */
+	Parser<StatementSequence> getStatementSequenceParser();
+
+	/**
+	 * @return A term parser.
+	 */
+	Parser<Term> getTermParser();
+
+	/**
+	 * @return An id parser.
+	 */
+	Parser<Id> getIdParser();
+
+	/**
+	 * @return A new ParserContainer instance.
+	 */
+	static ParserContainer newInstance();
+}
+
+/**
+ * Represents an AST node interface that defines the ability to print itself.
+ */
+public interface Printable {
+
+	/**
+	 * Prints this AST node to the PrintStream at a specified indent.
+	 *
+	 * @param indent
+	 *            the indent to print at.
+	 * @param printer
+	 *            the printer to print to.
+	 */
+	void print(int indent, PrintStream printer);
+
+	/**
+	 * Utility method to print amount spaces to a given print stream.
+	 *
+	 * @param amount
+	 *            the amount of spaces to print.
+	 * @param p
+	 *            the print stream to print to.
+	 */
+	static void printNSpaces(int amount, PrintStream p);
+
+	/**
+	 * Utility method that returns the next indent given a previous indent.
+	 * 
+	 * @param i
+	 *            the previous indent.
+	 * @return the next indent.
+	 */
+	static int nextIndent(int i);
+}
+
+/**
+ * Represents an AST node with the ability to evaluate and return a value.
+ *
+ * @param <T>
+ *            The type that this node will return after evaluation.
+ */
+public interface Evaluatable<T> extends Printable {
+
+	/**
+	 * Evaluates this node.
+	 * 
+	 * @return The result of the evaluation.
+	 */
+	T evaluate();
+}
+
+/**
+ * Represents an AST node interface with the ability to assign a value.
+ *
+ * @param <T>
+ *            The type of the value that can be assigned to this node.
+ */
+public interface Assignable<T> extends Evaluatable<T> {
+
+	/**
+	 * Assigns value to this node.
+	 * 
+	 * @param value
+	 *            the value to assign.
+	 */
+	void assign(T value);
+}
+
+/**
+ * Represents an AST node with the ability to execute itself.
+ */
+public interface Executable extends Printable {
+
+	/**
+	 * Executes this node.
+	 */
+	void execute();
+}
+
+/**
+ * Assign AST node.
+ */
+public interface Assign extends Executable {
+
+	/**
+	 * Factory method to create Assign node instances.
+	 * 
+	 * @param id
+	 *            The id child node.
+	 * @param expr
+	 *            The expression child node.
+	 * @return The assign node instance.
+	 */
+	static Assign createInstance(Id id, Expression expr);
+}
+
+/**
+ * Composite AST node.
+ */
+public interface Composite extends Evaluatable<Boolean> {
+
+	/**
+	 * Composite node Type enum.
+	 */
+	public static enum Type {
+		NOT_EQUAL, EQUAL, GREATER, LESS, GREATER_OR_EQUAL, LESS_OR_EQUAL
+	}
+
+	/**
+	 * Factory method to create composite node instances.
+	 *
+	 * @param f1
+	 *            factor 1 child.
+	 * @param t
+	 *            composite type child.
+	 * @param f2
+	 *            factor 2 child.
+	 * @return A composite node instance.
+	 */
+	static Composite createInstance(Factor f1, Type t, Factor f2);
+}
+
+/**
+ * Condition AST node.
+ */
+public interface Condition extends Evaluatable<Boolean> {
+
+	/**
+	 * Condition node type enum.
+	 */
+	public static enum Type {
+		REGULAR, NEGATED, AND, OR
+	}
+
+	/**
+	 * Condition node factory method.
+	 *
+	 * @param comp
+	 *            the composite node child instance.
+	 * @return A condition node.
+	 */
+	static Condition createInstance(Composite comp);
+
+	/**
+	 * Condition node factory method.
+	 * 
+	 * @param cond
+	 *            the condition node child instance.
+	 * @return A condition node.
+	 */
+	static Condition createInstance(Condition cond);
+
+	/**
+	 * Condition node factory method.
+	 * 
+	 * @param type
+	 *            The type of this condition.
+	 * @param cond1
+	 *            the condition 1 node child instance.
+	 * @param cond2
+	 *            the condition 2 node child instance.
+	 * @return A condition node.
+	 */
+	static Condition createInstance(Type type, Condition cond1, Condition cond2);
+}
+
+/**
+ * Declaration AST node interface.
+ */
+public interface Declaration extends Executable {
+
+	/**
+	 * Declaration node factory method.
+	 *
+	 * @param idl
+	 *            the id list node child instance.
+	 * @return A declaration node.
+	 */
+	static Declaration createInstance(IdList idl);
+}
+
+/**
+ * Declaration sequence AST node interface.
+ */
+public interface DeclarationSequence extends Executable {
+
+	/**
+	 * Declaration Sequence factory method.
+	 * 
+	 * @param dec
+	 *            the declaration node child instance.
+	 * @return A declaration sequence node.
+	 */
+	static DeclarationSequence createInstance(Declaration dec);
+
+	/**
+	 * Declaration sequence factory method.
+	 * 
+	 * @param dec
+	 *            the declaration node child instance.
+	 * @param decs
+	 *            the declaration sequence child instance.
+	 * @return A declaration sequence node.
+	 */
+	static DeclarationSequence createInstance(Declaration dec, DeclarationSequence decs);
+}
+
+/**
+ * Expression AST node interface.
+ */
+public interface Expression extends Evaluatable<Integer> {
+
+	/**
+	 * Expression Type enum
+	 */
+	public static enum Type {
+		ADD, SUB
+	}
+
+	/**
+	 * Expression node factory method.
+	 * 
+	 * @param t
+	 *            the term node child instance.
+	 * @return An expression node.
+	 */
+	static Expression createInstance(Term t);
+
+	/**
+	 * Expression node factory method.
+	 * 
+	 * @param t
+	 *            The term node child instance.
+	 * @param type
+	 *            The expression type.
+	 * @param expr
+	 *            The expression node child instance.
+	 * @return An expression node.
+	 */
+	static Expression createInstance(Term t, Type type, Expression expr);
+}
+
+/**
+ * Factor AST node.
+ */
+public interface Factor extends Evaluatable<Integer> {
+
+	/**
+	 * Factor node factory method.
+	 * 
+	 * @param integerString
+	 *            The integer literal child node.
+	 * @return A factor node.
+	 */
+	static Factor createInstance(String integerString);
+
+	/**
+	 * Factor node factory method.
+	 * 
+	 * @param id
+	 *            the id node child instance.
+	 * @return A factor node.
+	 */
+	static Factor createInstance(Id id);
+
+	/**
+	 * Factor node factory method.
+	 * 
+	 * @param expr
+	 *            the expression node child instance.
+	 * @return A factor node.
+	 */
+	static Factor createInstance(Expression expr);
+}
+
+/**
+ * Id AST node interface.
+ */
+public interface Id extends Assignable<Integer> {
+
+	/**
+     * Id node factory method.
+     *
+     * @param value
+     *            the value of the id.
+     * @return An id node.
+     */
+    static Id createInstance(String value);
+
+    /**
+     * Returns the identifier associated with this id.
+     */
+    String getIdentifier();
+
+    /**
+     * Reports whether this Id has a value.
+     */
+    boolean hasValue();
+
+    /**
+     * Reports whether this object is declared.
+     */
+    boolean isDeclared();
+
+    /**
+     * Declares this object.
+     */
+    void setDeclared();
+}
+
+/**
+ * IdList AST node.
+ */
+public interface IdList extends Evaluatable<List<Id>> {
+
+	/**
+	 * IdList factory method.
+	 * 
+	 * @param id
+	 *            the id child node.
+	 * @return An IdList instance.
+	 */
+	static IdList createInstance(Id id);
+
+	/**
+	 * IdList factory method.
+	 * 
+	 * @param id
+	 *            the id child node.
+	 * @param idl
+	 *            the idlist child node.
+	 * @return An idlist instance.
+	 */
+	static IdList createInstance(Id id, IdList idl);
+}
+
+/**
+ * If AST node interface.
+ */
+public interface If extends Executable {
+
+	/**
+	 * If factory instance.
+	 * 
+	 * @param cond
+	 *            the condition node child instance.
+	 * @param stmsSeq
+	 *            the smtSeq node child instance.
+	 * @return An if node.
+	 */
+	static If createInstance(Condition cond, StatementSequence stmsSeq);
+
+	/**
+	 * If factory instance.
+	 * 
+	 * @param cond
+	 *            the condition node child instance.
+	 * @param stmsSeqTrue
+	 *            the statement sequence upon true child instance.
+	 * @param stmsSeqFalse
+	 *            the statement sequence upon false child instance.
+	 * @return An if node.
+	 */
+	static If createInstance(Condition cond, StatementSequence stmsSeqTrue, StatementSequence stmsSeqFalse);
+}
+
+/**
+ * In AST node interface.
+ */
+public interface In extends Executable {
+
+	/**
+	 * In factory method.
+	 * 
+	 * @param idl
+	 *            the id list child instance.
+	 * @return An in instance.
+	 */
+	static In createInstance(IdList idl);
+}
+
+/**
+ * Loop AST node interface.
+ */
+public interface Loop extends Executable {
+
+	/**
+	 * Loop node factory method.
+	 * 
+	 * @param cond
+	 *            the condition node child instance.
+	 * @param stmtSeq
+	 *            the stmtSeq node child instance.
+	 * @return A loop node.
+	 */
+	static Loop createInstance(Condition cond, StatementSequence stmtSeq);
+}
+
+/**
+ * Out AST node interface.
+ */
+public interface Out extends Executable {
+
+	/**
+	 * Out factory method.
+	 * 
+	 * @param idl
+	 *            the id list child instance.
+	 * @return An out node instance.
+	 */
+	static Out createInstance(IdList idl);
+}
+
+/**
+ * Program AST node interface.
+ */
+public interface Program extends Executable {
+
+	/**
+	 * Program factory method.
+	 * 
+	 * @param ds
+	 *            the declaration sequence child node instance.
+	 * @param ss
+	 *            the statement sequence child node instance.
+	 * @return A program node.
+	 */
+	static Program createInstance(DeclarationSequence ds, StatementSequence ss);
+}
+
+/**
+ * Statement AST node.
+ */
+public interface Statement extends Executable {
+
+	/**
+	 * Statement factory method.
+	 * 
+	 * @param assign
+	 *            the assign node child instance.
+	 * @return A statement node.
+	 */
+	static Statement createInstance(Assign assign);
+
+	/**
+	 * Statement factory method.
+	 * 
+	 * @param ifStmt
+	 *            the if statement node child instance.
+	 * @return A statement node.
+	 */
+	static Statement createInstance(If ifStmt);
+
+	/**
+	 * Statement factory method.
+	 * 
+	 * @param loop
+	 *            the loop statement node child instance.
+	 * @return A statement node.
+	 */
+	static Statement createInstance(Loop loop);
+
+	/**
+	 * Statement factory method.
+	 * 
+	 * @param in
+	 *            the in statement node child instance.
+	 * @return A statement node.
+	 */
+	static Statement createInstance(In in);
+
+	/**
+	 * Statement factory method.
+	 * 
+	 * @param out
+	 *            the out statement node child instance.
+	 * @return A statement node.
+	 */
+	static Statement createInstance(Out out);
+}
+
+/**
+ * Statement Sequence AST node.
+ */
+public interface StatementSequence extends Executable {
+
+	/**
+	 * Statement Sequence factory method.
+	 * 
+	 * @param stmt
+	 *            The statement child node instance.
+	 * @return A statement sequence node.
+	 */
+	static StatementSequence createInstance(Statement stmt);
+
+	/**
+	 * Statement sequence factory method.
+	 * 
+	 * @param stmt
+	 *            the statement child node instance.
+	 * @param stmtSeq
+	 *            the statement sequence child node instance.
+	 * @return A statement sequence node.
+	 */
+	static StatementSequence createInstance(Statement stmt, StatementSequence stmtSeq);
+}
+
+/**
+ * Term AST node interface.
+ */
+public interface Term extends Evaluatable<Integer> {
+
+	/**
+	 * Term factory method.
+	 * 
+	 * @param f
+	 *            Factor node child instance.
+	 * @return A factor node.
+	 */
+	static Term createInstance(Factor f);
+
+	/**
+	 * Term factory method.
+	 * 
+	 * @param f
+	 *            Factor node child instance.
+	 * @param t
+	 *            Term node child instance.
+	 * @return A factor node.
+	 */
+	static Term createInstance(Factor f, Term t);
+}
+
+/**
+ * Utility class to parse Core Ints
+ */
+public class IntParser {
+
+    /**
+     * Reports whether i is a valid core integer.
+     * @param i The int to test
+     * @return Whether i is a valid core integer.
+     */
+	public static boolean isValidInt(int i);
+
+    /**
+     * Reports whether the string is a valid integer.
+     * @param str the string to test.
+     * @return whether the string is a valid integer.
+     */
+	public static boolean isValidInt(String str);
+
+    /**
+     * Parses str as a core int.
+     * @param str the string to parse.
+     * @return the parsed int.
+     */
+	public static int parse(String str);
+}
+
+/**
+ * Public interface for the Core Tokenizer.
+ *
+ * @author Frank Dattalo
+ */
+public interface Tokenizer {
+
+	public static enum Type {
+		PROGRAM, BEGIN, END, INT, IF, THEN, ELSE, WHILE, LOOP, READ, WRITE, AND, OR, SEMICOLON, ASSIGN, NOT,
+		LEFT_BRACKET, RIGHT_BRACKET, LEFT_PAREN, RIGHT_PAREN, PLUS, MINUS, TIMES, NOT_EQUAL, EQUAL,
+		GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN, INTEGER, IDENTIFIER
+	}
+
+	/**
+	 * Factory method for instantiating tokenizers.
+	 *
+	 * @param in
+	 *            the core input file.
+	 * @return A core tokenizer instance.
+	 */
+	static Tokenizer createInstance(File in);
+
+	/**
+	 * The Token that signifies the end of the file.
+	 */
+	static final String EOF = "###END_OF_FILE_TOKEN###";
+
+	/**
+	 * Returns the current token from the input program.
+	 */
+	String getCurrentToken();
+
+	/**
+	 * Advances the cursor to the next token from the input program.
+	 */
+	void nextToken();
+
+	/**
+	 * Returns the current line number of the tokenizer.
+	 */
+	int getCurrentLineNumber();
+
+	/**
+	 * @param t
+	 *            - The Token to convert to a tokenizer enum
+	 * @return - the Enum tokenizer type
+	 */
+	Tokenizer.Type toType(String t);
+}
+
+/**
+ * Common exception class for the Core Interpreter. User related errors will be
+ * thrown using this exception.
+ *
+ * @author Frank Dattalo
+ */
+public class CoreException extends RuntimeException {
+
+	public CoreException(String s);
+}

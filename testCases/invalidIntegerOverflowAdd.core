@@ -1,0 +1,6 @@
+program
+    int X, Y;
+begin
+	X = 99999999 + 1;
+	write X;
+end
